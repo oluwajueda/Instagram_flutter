@@ -7,13 +7,12 @@ class AuthServices {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  Future<String> signUpUser({
-    required String email,
-    required String password,
-    required String username,
-    required String bio,
-    // required Uint8List file
-  }) async {
+  Future<String> signUpUser(
+      {required String email,
+      required String password,
+      required String username,
+      required String bio,
+      required Uint8List file}) async {
     String res = "Some error occured";
 
     try {
@@ -26,6 +25,8 @@ class AuthServices {
           ) {
         UserCredential credential = await _auth.createUserWithEmailAndPassword(
             email: email, password: password);
+
+        print(credential.user!.uid);
 
         await _firestore.collection("users").doc(credential.user!.uid).set({
           "username": username,
