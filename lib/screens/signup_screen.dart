@@ -46,28 +46,38 @@ class _LoginScreenState extends State<SignupScreen> {
   }
 
   void signUpUser() async {
+    // set loading to true
     setState(() {
       _isLoading = true;
     });
+
+    // signup user using our authmethodds
     String res = await AuthServices().signUpUser(
         email: _emailController.text,
         password: _passwordController.text,
         username: _usernameController.text,
         bio: _bioController.text,
         file: _image!);
-
-    setState(() {
-      _isLoading = false;
-    });
-
-    if (res != "success") {
-      showSnackBar(context, res);
-    } else {
-      Navigator.of(context).pushReplacement(MaterialPageRoute(
+    // if string returned is sucess, user has been created
+    if (res == "success") {
+      setState(() {
+        _isLoading = false;
+      });
+      // navigate to the home screen
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
           builder: (context) => const ResponsiveLayout(
-                mobileScreenLayout: MobileScreenLayout(),
-                webScreenLayout: WebScreenLayout(),
-              )));
+            mobileScreenLayout: MobileScreenLayout(),
+            webScreenLayout: WebScreenLayout(),
+          ),
+        ),
+      );
+    } else {
+      setState(() {
+        _isLoading = false;
+      });
+      // show the error
+      showSnackBar(context, res);
     }
   }
 
