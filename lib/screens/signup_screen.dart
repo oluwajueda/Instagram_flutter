@@ -16,32 +16,43 @@ class SignupScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<SignupScreen> {
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _bioController = TextEditingController();
+  final TextEditingController _usernameController = TextEditingController();
+
+  Uint8List? _image;
+
+  selectImage() async {
+    Uint8List im = await pickImage(ImageSource.gallery);
+    // set state because we need to display the image we selected on the circle avatar
+    setState(() {
+      _image = im;
+    });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    _bioController.dispose();
+    _usernameController.dispose();
+  }
+
+  void signUpUser() async {
+    String res = await AuthServices().signUpUser(
+        email: _emailController.text,
+        password: _passwordController.text,
+        username: _usernameController.text,
+        bio: _bioController.text,
+        file: _image!);
+
+    if (res != "success") {}
+  }
+
   @override
   Widget build(BuildContext context) {
-    final TextEditingController _emailController = TextEditingController();
-    final TextEditingController _passwordController = TextEditingController();
-    final TextEditingController _bioController = TextEditingController();
-    final TextEditingController _usernameController = TextEditingController();
-
-    Uint8List? _image;
-
-    selectImage() async {
-      Uint8List im = await pickImage(ImageSource.gallery);
-      // set state because we need to display the image we selected on the circle avatar
-      setState(() {
-        _image = im;
-      });
-    }
-
-    @override
-    void dispose() {
-      super.dispose();
-      _emailController.dispose();
-      _passwordController.dispose();
-      _bioController.dispose();
-      _usernameController.dispose();
-    }
-
     return Scaffold(
       resizeToAvoidBottomInset: false,
       body: SafeArea(
@@ -118,15 +129,7 @@ class _LoginScreenState extends State<SignupScreen> {
               height: 24,
             ),
             InkWell(
-              onTap: () async {
-                String res = await AuthServices().signUpUser(
-                    email: _emailController.text,
-                    password: _passwordController.text,
-                    username: _usernameController.text,
-                    bio: _bioController.text,
-                    file: _image!);
-                print(res);
-              },
+              onTap: signUpUser,
               child: Container(
                 child: const Text("Sign up"),
                 width: double.infinity,
