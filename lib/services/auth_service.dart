@@ -52,4 +52,32 @@ class AuthServices {
     }
     return res;
   }
+
+  Future<String> loginUser({
+    required String email,
+    required String password,
+  }) async {
+    String res = "Some error Occurred";
+    try {
+      if (email.isNotEmpty || password.isNotEmpty) {
+        // logging in user with email and password
+        await _auth.signInWithEmailAndPassword(
+          email: email,
+          password: password,
+        );
+        res = "success";
+      } else {
+        res = "Please enter all the fields";
+      }
+    } on FirebaseAuthException catch (e) {
+      if (e.code == "user-not-found") {
+        res = "user does not exist";
+      } else if (e.code == "wrong-password") {
+        res = "Wrong Password";
+      }
+    } catch (err) {
+      return err.toString();
+    }
+    return res;
+  }
 }
