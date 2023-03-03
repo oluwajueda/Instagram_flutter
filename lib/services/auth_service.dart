@@ -6,62 +6,64 @@ import 'package:instagram_flutter/models/user.dart' as model;
 import 'package:instagram_flutter/services/storage_service.dart';
 
 class AuthServices {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
 
+  // get user details
   Future<model.User> getUserDetails() async {
     User currentUser = _auth.currentUser!;
 
-    DocumentSnapshot snap =
-        await _firestore.collection("users").doc(currentUser.uid).get();
+    DocumentSnapshot documentSnapshot =
+        await _firestore.collection('users').doc(currentUser.uid).get();
 
-    return model.User.fromSnap(snap);
+    return model.User.fromSnap(documentSnapshot);
   }
 
-  Future<String> signUpUser(
-      {required String email,
-      required String password,
-      required String username,
-      required String bio,
-      required Uint8List file}) async {
-    String res = "Some error occured";
-
+  Future<String> signUpUser({
+    required String email,
+    required String password,
+    required String username,
+    required String bio,
+    required Uint8List file,
+  }) async {
+    String res = "Some error Occurred";
     try {
       if (email.isNotEmpty ||
           password.isNotEmpty ||
           username.isNotEmpty ||
           bio.isNotEmpty ||
           file != null) {
-        UserCredential credential = await _auth.createUserWithEmailAndPassword(
-            email: email, password: password);
+        // registering user in auth with email and password
+        UserCredential cred = await _auth.createUserWithEmailAndPassword(
+          email: email,
+          password: password,
+        );
 
-        print(credential.user!.uid);
+        String photoUrl = await StorageMethods()
+            .uploadImageToStorage('profilePics', file, false);
 
-        String photUrl = await StorageMethods()
-            .uploadImageToStorage("profilePictures", file, false);
+        model.User _user = model.User(
+          username: username,
+          uid: cred.user!.uid,
+          photoUrl: photoUrl,
+          email: email,
+          bio: bio,
+          followers: [],
+          following: [],
+        );
 
-        model.User user = model.User(
-            username: username,
-            uid: credential.user!.uid,
-            photoUrl: photUrl,
-            email: email,
-            bio: bio,
-            followers: [],
-            following: []);
+        // adding user in our database
+        await _firestore
+            .collection("users")
+            .doc(cred.user!.uid)
+            .set(_user.toJson());
 
-        await _firestore.collection("users").doc(credential.user!.uid).set(
-              user.toJson(),
-            );
         res = "success";
+      } else {
+        res = "Please enter all the fields";
       }
-    } on FirebaseAuthException catch (err) {
-      if (err.code == "invlid-email") {
-        res = "The email is badly formatted";
-      } else if (err.code == "weak-password") {
-        res = "Password should be at least 6 characters";
-      }
-    } catch (e) {
-      res = e.toString();
+    } catch (err) {
+      return err.toString();
     }
     return res;
   }
