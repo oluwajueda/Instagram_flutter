@@ -6,6 +6,7 @@ import 'package:flutter/src/widgets/placeholder.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:instagram_flutter/models/user.dart';
 import 'package:instagram_flutter/providers/user_provider.dart';
+import 'package:instagram_flutter/services/firestore_services.dart';
 import 'package:instagram_flutter/utils/colors.dart';
 import 'package:instagram_flutter/utils/utils.dart';
 import 'package:provider/provider.dart';
@@ -21,6 +22,8 @@ class _AddPostScreenState extends State<AddPostScreen> {
   Uint8List? _file;
 
   final TextEditingController _descriptionController = TextEditingController();
+
+  bool _isLoading = false;
 
   _selectImage(BuildContext context) async {
     return showDialog(
@@ -73,7 +76,46 @@ class _AddPostScreenState extends State<AddPostScreen> {
     _descriptionController.dispose();
   }
 
-  void postImage() {}
+  void postImage(
+    String uid,
+    String username,
+    String profImage,
+  ) async {
+    setState(() {
+      _isLoading = true;
+    });
+    try {
+      String res = await FirestoreMethods().uploadPost(
+        _descriptionController.text,
+        _file!,
+        uid,
+        username,
+        profImage,
+      );
+
+      if (res == "success") {
+        setState(() {
+          _isLoading = false;
+        });
+
+        showSnackBar(context, "Posted");
+        clearImage();
+      } else {
+        setState(() {
+          _isLoading = false;
+        });
+        showSnackBar(context, res);
+      }
+    } catch (e) {
+      showSnackBar(context, e.toString());
+    }
+  }
+
+  void clearImage() {
+    setState(() {
+      _file = null;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -90,14 +132,15 @@ class _AddPostScreenState extends State<AddPostScreen> {
             appBar: AppBar(
               backgroundColor: mobileBackgroundColor,
               leading: IconButton(
-                onPressed: postImage,
+                onPressed: clearImage,
                 icon: const Icon(Icons.arrow_back),
               ),
               title: const Text("Post to  "),
               centerTitle: false,
               actions: [
                 TextButton(
-                    onPressed: () {},
+                    onPressed: () =>
+                        postImage(user.uid, user.username, user.photoUrl),
                     child: const Text(
                       "Post",
                       style: TextStyle(
@@ -109,6 +152,10 @@ class _AddPostScreenState extends State<AddPostScreen> {
             ),
             body: Column(
               children: [
+                _isLoading
+                    ? const LinearProgressIndicator()
+                    : Padding(padding: EdgeInsets.only(top: 0)),
+                const Divider(),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   crossAxisAlignment: CrossAxisAlignment.start,
