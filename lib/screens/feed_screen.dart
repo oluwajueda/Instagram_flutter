@@ -12,29 +12,33 @@ class FeedScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          backgroundColor: mobileBackgroundColor,
-          centerTitle: false,
-          title: SvgPicture.asset(
-            "assets/ic_instagram.svg",
-            colorFilter: ColorFilter.mode(Colors.white, BlendMode.srcIn),
-            height: 32,
-          ),
-          actions: [
-            IconButton(onPressed: () {}, icon: Icon(Icons.messenger_outline))
-          ],
+      appBar: AppBar(
+        backgroundColor: mobileBackgroundColor,
+        centerTitle: false,
+        title: SvgPicture.asset(
+          "assets/ic_instagram.svg",
+          colorFilter: ColorFilter.mode(Colors.white, BlendMode.srcIn),
+          height: 32,
         ),
-        body: StreamBuilder(
-            stream: FirebaseFirestore.instance.collection("posts").snapshots(),
-            builder: (context,
-                AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>> snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
-              }
-              return ListView.builder(
-                itemCount: snapshot.data!.docs.length,
-                itemBuilder: (context, index) => PostCard(),
-              );
-            }));
+        actions: [
+          IconButton(onPressed: () {}, icon: Icon(Icons.messenger_outline))
+        ],
+      ),
+      body: PostCard(),
+      // body: StreamBuilder(
+      //     stream: FirebaseFirestore.instance.collection("posts").snapshots(),
+      //     builder: (context,
+      //         AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>> snapshot) {
+      //       if (snapshot.connectionState == ConnectionState.waiting) {
+      //         return const Center(child: CircularProgressIndicator());
+      //       }
+      //       return ListView.builder(
+      //         itemCount: snapshot.data!.docs.length,
+      //         itemBuilder: (context, index) => PostCard(
+      //             // snap: snapshot.data!.docs
+      //             ),
+      //       );
+      //     })
+    );
   }
 }
