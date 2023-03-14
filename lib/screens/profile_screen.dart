@@ -1,96 +1,183 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/src/widgets/framework.dart';
 import 'package:flutter/src/widgets/placeholder.dart';
 import 'package:instagram_flutter/utils/colors.dart';
+import 'package:instagram_flutter/utils/utils.dart';
 import 'package:instagram_flutter/widgets/follow_button.dart';
 
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key});
+  final String uid;
+  const ProfileScreen({super.key, required this.uid});
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
+  var userData = {};
+  int postLen = 0;
+  int followers = 0;
+  int following = 0;
+  bool isFollowing = false;
+
+  bool isLoading = false;
+  initState() {
+    super.initState();
+    getData();
+  }
+
+  getData() async {
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      var userSnap = await FirebaseFirestore.instance
+          .collection("users")
+          .doc(widget.uid)
+          .get();
+
+      var postSnap = await FirebaseFirestore.instance
+          .collection('posts')
+          .where('uid', isEqualTo: FirebaseAuth.instance.currentUser!.uid)
+          .get();
+      postLen = postSnap.docs.length;
+      userData = userSnap.data()!;
+      followers = userSnap.data()!['followers'].length;
+      following = userSnap.data()!['following'].length;
+      isFollowing = userSnap
+          .data()!['followers']
+          .contains(FirebaseAuth.instance.currentUser!.uid);
+      setState(() {});
+    } catch (e) {
+      showSnackBar(context, e.toString());
+    }
+
+    setState(() {
+      isLoading = false;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: mobileBackgroundColor,
-        title: Text("username"),
-        centerTitle: false,
-      ),
-      body: ListView(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
+    return isLoading
+        ? const Center(
+            child: CircularProgressIndicator(),
+          )
+        : Scaffold(
+            appBar: AppBar(
+              backgroundColor: mobileBackgroundColor,
+              title: Text(userData["username"]),
+              centerTitle: false,
+            ),
+            body: ListView(
               children: [
-                Row(
-                  children: [
-                    CircleAvatar(
-                      backgroundColor: Colors.grey,
-                      backgroundImage: NetworkImage(
-                        "https://www.alamy.com/200-biker-stylish-pose-pictures-download-free-handsome-biker-stock-images-on-alamy-image476173319.html?imageid=159A906E-5B99-48E5-B549-EB9AE950DFDF&p=1994419&pn=1&searchId=1b4d33990c84118109e2e37f41e78643&searchtype=0",
-                      ),
-                      radius: 40,
-                    ),
-                    Expanded(
-                      flex: 1,
-                      child: Column(
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    children: [
+                      Row(
                         children: [
-                          Row(
-                            mainAxisSize: MainAxisSize.max,
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: [
-                              buildStatColumn(20, "posts"),
-                              buildStatColumn(20, "followers"),
-                              buildStatColumn(20, "following")
-                            ],
+                          CircleAvatar(
+                            backgroundColor: Colors.grey,
+                            backgroundImage: NetworkImage(userData["photoUrl"]),
+                            radius: 40,
                           ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: [
-                              FollowButton(
-                                text: 'Edit Profile',
-                                backgroundColor: Colors.white,
-                                textColor: Colors.black,
-                                borderColor: Colors.grey,
-                                function: () async {},
-                              )
-                            ],
-                          )
+                          Expanded(
+                            flex: 1,
+                            child: Column(
+                              children: [
+                                Row(
+                                  mainAxisSize: MainAxisSize.max,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceEvenly,
+                                  children: [
+                                    buildStatColumn(postLen, "posts"),
+                                    buildStatColumn(followers, "followers"),
+                                    buildStatColumn(following, "following")
+                                  ],
+                                ),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceEvenly,
+                                  children: [
+                                    FollowButton(
+                                      text: 'Edit Profile',
+                                      backgroundColor: Colors.white,
+                                      textColor: Colors.black,
+                                      borderColor: Colors.grey,
+                                      function: () async {},
+                                    )
+                                  ],
+                                )
+                              ],
+                            ),
+                          ),
                         ],
                       ),
-                    ),
-                  ],
+                      Container(
+                        alignment: Alignment.centerLeft,
+                        padding: const EdgeInsets.only(
+                          top: 15,
+                        ),
+                        child: Text(
+                          userData["username"],
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      Container(
+                        alignment: Alignment.centerLeft,
+                        padding: const EdgeInsets.only(
+                          top: 1,
+                        ),
+                        child: Text(
+                          userData["bio"],
+                        ),
+                      )
+                    ],
+                  ),
                 ),
-                Container(
-                  alignment: Alignment.centerLeft,
-                  padding: const EdgeInsets.only(
-                    top: 15,
-                  ),
-                  child: Text(
-                    "username",
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                ),
-                Container(
-                  alignment: Alignment.centerLeft,
-                  padding: const EdgeInsets.only(
-                    top: 1,
-                  ),
-                  child: Text(
-                    "some description",
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                )
+                const Divider(),
+                FutureBuilder(
+                    future: FirebaseFirestore.instance
+                        .collection('posts')
+                        .where('uid', isEqualTo: widget.uid)
+                        .get(),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(
+                          child: CircularProgressIndicator(),
+                        );
+                      }
+
+                      return GridView.builder(
+                        shrinkWrap: true,
+                        itemCount: (snapshot.data! as dynamic).docs.length,
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 3,
+                          crossAxisSpacing: 5,
+                          mainAxisSpacing: 1.5,
+                          childAspectRatio: 1,
+                        ),
+                        itemBuilder: (context, index) {
+                          DocumentSnapshot snap =
+                              (snapshot.data! as dynamic).docs[index];
+
+                          return Container(
+                            child: Image(
+                              image: NetworkImage(snap['postUrl']),
+                              fit: BoxFit.cover,
+                            ),
+                          );
+                        },
+                      );
+                    })
               ],
             ),
-          )
-        ],
-      ),
-    );
+          );
   }
 
   Column buildStatColumn(int num, String label) {
