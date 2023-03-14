@@ -3,6 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/src/widgets/framework.dart';
 import 'package:flutter/src/widgets/placeholder.dart';
+import 'package:instagram_flutter/screens/login_screen.dart';
+import 'package:instagram_flutter/services/auth_service.dart';
 import 'package:instagram_flutter/services/firestore_services.dart';
 import 'package:instagram_flutter/utils/colors.dart';
 import 'package:instagram_flutter/utils/utils.dart';
@@ -113,14 +115,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                             textColor: primaryColor,
                                             borderColor: Colors.grey,
                                             function: () async {
-                                              // await AuthMethods().signOut();
-                                              // Navigator.of(context)
-                                              //     .pushReplacement(
-                                              //   MaterialPageRoute(
-                                              //     builder: (context) =>
-                                              //         const LoginScreen(),
-                                              //   ),
-                                              // );
+                                              await AuthServices().signOut();
+                                              Navigator.of(context)
+                                                  .pushReplacement(
+                                                MaterialPageRoute(
+                                                  builder: (context) =>
+                                                      const LoginScreen(),
+                                                ),
+                                              );
                                             },
                                           )
                                         : isFollowing
