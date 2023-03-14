@@ -90,18 +90,18 @@ class _MobileScreenLayoutState extends State<MobileScreenLayout> {
             label: "",
             backgroundColor: primaryColor,
           ),
-          BottomNavigationBarItem(
-            icon: Icon(
-              Icons.favorite,
-              color: _page == 3 ? Colors.black54 : secondaryColor,
-            ),
-            label: "",
-            backgroundColor: primaryColor,
-          ),
+          // BottomNavigationBarItem(
+          //   icon: Icon(
+          //     Icons.favorite,
+          //     color: _page == 3 ? Colors.black54 : secondaryColor,
+          //   ),
+          //   label: "",
+          //   backgroundColor: primaryColor,
+          // ),
           BottomNavigationBarItem(
             icon: Icon(
               Icons.person,
-              color: _page == 4 ? Colors.black54 : secondaryColor,
+              color: _page == 3 ? Colors.black54 : secondaryColor,
             ),
             label: "",
             backgroundColor: primaryColor,
